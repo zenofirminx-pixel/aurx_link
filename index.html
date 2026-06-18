@@ -31,8 +31,8 @@
    .game-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3); }
     #menuPanel, #infoPanel { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #menuPanel.open, #infoPanel.open { transform: translateX(0); }
-    #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: rgba(10, 10, 15, 0.3)!important; backdrop-filter: blur(4px); }
-    #loadingBar { transition: width 0.2s ease; }
+    #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: transparent !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important; }
+
 </style>
 </head>
 <body class="text-gray-100">
