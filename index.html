@@ -9,11 +9,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<title>AX3D Streaming</title>
-<meta name="theme-color" content="#0a0a0f">
+<title>AX3D Streaming & Engine v4</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Inter:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght=400;600;900&family=Inter:wght=300;400;500;600&display=swap');
     :root { --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-top: env(safe-area-inset-top, 0px); }
     * { -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
     html, body { overscroll-behavior: none; position: fixed; width: 100%; height: 100%; }
@@ -21,7 +20,7 @@
    .logo-font { font-family: 'Orbitron', sans-serif; }
    .glass { background: rgba(15, 15, 25, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
    .controller-btn { transition: all 0.08s; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-   .controller-btn:active,.controller-btn.active { transform: scale(1.3); box-shadow: 0 0 30px currentColor; }
+   .controller-btn:active,.controller-btn.active { transform: scale(1.2); box-shadow: 0 0 30px currentColor; }
    .stick-area { background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.4) 100%); box-shadow: inset 0 3px 12px rgba(0,0,0,0.6); }
    .stick-nub { transition: transform 0.03s linear; box-shadow: 0 3px 10px rgba(0,0,0,0.7), 0 0 25px rgba(99,102,241,0.5); }
     #gameCanvas { display: block; width: 100%; height: 100%; }
@@ -33,8 +32,6 @@
     #menuPanel { transform: translateX(100%); transition: transform 0.3s; }
     #menuPanel.open { transform: translateX(0); }
     #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: rgba(10, 10, 15, 0.3)!important; backdrop-filter: blur(4px); }
-    #controller.glass { background: transparent!important; backdrop-filter: none!important; border: none!important; box-shadow: none!important; }
-    #loadingBar { transition: width 0.2s ease; }
 </style>
 </head>
 <body class="text-gray-100">
@@ -50,26 +47,23 @@
                         <p class="text-xs text-gray-500" id="gameCount">0 games</p>
                     </div>
                 </div>
-                <label for="gameFile" class="cursor-pointer px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all font-semibold shadow-lg shadow-indigo-500/30">
-                    + Load.ax
-                </label>
-                <input type="file" id="gameFile" accept=".ax" class="hidden">
-            </header>
-
-            <div id="loadingOverlay" class="hidden absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
-                <div class="logo-font text-6xl font-black text-indigo-500 mb-6">LOADING</div>
-                <div class="w-80 h-2 bg-gray-800 rounded-full overflow-hidden">
-                    <div id="loadingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-0"></div>
+                <div class="flex items-center gap-3">
+                    <button id="creatorBtn" class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all font-medium text-sm flex items-center gap-2">
+                        👑 Creator Info
+                    </button>
+                    <label for="gameFile" class="cursor-pointer px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all font-semibold shadow-lg shadow-indigo-500/30 text-sm">
+                        + Load .ax
+                    </label>
+                    <input type="file" id="gameFile" accept=".ax" class="hidden">
                 </div>
-                <p class="text-sm text-gray-400 mt-4" id="loadingText">Decrypting...</p>
-            </div>
+            </header>
 
             <main class="flex-1 overflow-y-auto p-6">
                 <div id="gameGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
                 <div id="emptyLibrary" class="flex flex-col items-center justify-center h-full text-center">
                     <div class="logo-font text-9xl font-black text-gray-900 mb-6">AX</div>
                     <h2 class="text-3xl font-bold mb-3 text-gray-400">No Games Yet</h2>
-                    <p class="text-gray-600 mb-8 max-w-md">Load a binary.ax file. Streaming engine supports files up to several GB.</p>
+                    <p class="text-gray-600 mb-8 max-w-md">Charge un fichier binaire compilé de format .ax pour l'exécuter en temps réel.</p>
                 </div>
             </main>
         </div>
@@ -86,17 +80,11 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
 
-            <div id="controller" class="glass absolute bottom-0 left-0 right-0 p-4 hidden slide-in">
+            <div id="controller" class="absolute bottom-0 left-0 right-0 p-4 hidden slide-in">
                 <div class="max-w-6xl mx-auto flex items-end justify-between gap-3 pb-5">
                     <div class="flex items-end gap-4">
                         <div id="leftStick" class="stick-area w-28 h-28 rounded-full relative cursor-pointer">
                             <div id="leftStickNub" class="stick-nub absolute w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-                        </div>
-                        <div class="relative w-28 h-28 mb-4">
-                            <button data-key="ArrowUp" class="controller-btn absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-lg bg-gray-800">↑</button>
-                            <button data-key="ArrowLeft" class="controller-btn absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-gray-800">←</button>
-                            <button data-key="ArrowRight" class="controller-btn absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-gray-800">→</button>
-                            <button data-key="ArrowDown" class="controller-btn absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-lg bg-gray-800">↓</button>
                         </div>
                     </div>
                     <div class="flex items-end gap-4">
@@ -105,9 +93,6 @@
                             <button data-key="j" class="controller-btn absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-blue-500 font-black text-lg">X</button>
                             <button data-key="l" class="controller-btn absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-red-500 font-black text-lg">B</button>
                             <button data-key="k" class="controller-btn absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-green-500 font-black text-lg">A</button>
-                        </div>
-                        <div id="rightStick" class="stick-area w-28 h-28 rounded-full relative cursor-pointer">
-                            <div id="rightStickNub" class="stick-nub absolute w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
                         </div>
                     </div>
                 </div>
@@ -122,24 +107,41 @@
                 </button>
             </div>
             <div class="flex-1 space-y-3">
-                <button id="saveBtn" class="w-full p-4 rounded-xl glass hover:bg-white/10 transition-all flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    <span class="font-medium">Save State</span>
-                </button>
-                <button id="loadBtn" class="w-full p-4 rounded-xl glass hover:bg-white/10 transition-all flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    <span class="font-medium">Load State</span>
-                </button>
                 <button id="resetBtn" class="w-full p-4 rounded-xl glass hover:bg-white/10 transition-all flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span class="font-medium">Reset Game</span>
                 </button>
             </div>
             <button id="quitBtn" class="w-full p-4 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 transition-all flex items-center justify-center gap-3 font-semibold" style="margin-bottom: var(--safe-bottom);">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                 Quit to Library
             </button>
         </div>
+
+        <div id="creatorModal" class="fixed inset-0 z-[70] hidden bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="glass max-w-md w-full rounded-2xl p-6 shadow-2xl relative border border-indigo-500/20 bg-[#0d0d17]/90">
+                <button id="closeCreatorModal" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-lg bg-white/5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-4">
+                        <span class="logo-font text-3xl font-black text-white">AX</span>
+                    </div>
+                    <h3 class="logo-font text-2xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400">AX3D ENGINE</h3>
+                    <p class="text-xs font-mono text-indigo-400 mb-6">Spécification v4.0</p>
+                    
+                    <div class="bg-black/30 rounded-xl p-4 border border-white/5 text-left font-mono text-xs space-y-3">
+                        <div class="flex justify-between"><span class="text-gray-500">Architecte:</span> <span class="text-white font-bold">Firmin</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Origine:</span> <span class="text-emerald-400 font-bold flex items-center gap-1">Congo RDC 🇨🇩</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Composants:</span> <span class="text-gray-300">AXVM Runtime v4</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Pipeline:</span> <span class="text-gray-300">.axs → Python Compiler → .ax</span></div>
+                    </div>
+                    
+                    <p class="text-gray-400 text-xs mt-6 leading-relaxed">
+                        Ce shell implémente une machine virtuelle (Virtual Machine) décodant en temps réel le bytecode custom natif de l'écosystème AX3D.
+                    </p>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script type="importmap">
@@ -149,284 +151,201 @@
     <script type="module">
         import * as THREE from 'three';
 
-        const AX3D_KEY = 'AX3D_SECURE_2026_32BYTES_KEY!!!';
-        const CHUNK_SIZE = 10 * 1024 * 1024; // 10 Mo par chunk
+        let scene, camera, renderer, animationId = null;
+        let gameLibrary = JSON.parse(localStorage.getItem('ax3d_library_v4') || '[]');
+        let activeGameBuffer = null;
 
-        let scene, camera, renderer, currentGame = null, animationId = null;
-        let currentGameData = null;
-        let gameLibrary = JSON.parse(localStorage.getItem('ax3d_library') || '[]');
-        let worker = null;
-
+        // ÉTAT DES INPUTS AX3D GLOBALS
         window.AX3D = {
             input: {
-                keys: new Set(),
                 leftStick: { x: 0, y: 0 },
-                rightStick: { x: 0, y: 0 },
-                buttons: { a: false, b: false, x: false, y: false, dpadUp: false, dpadDown: false, dpadLeft: false, dpadRight: false, lt: false, rt: false }
+                buttons: { a: false, b: false, x: false, y: false }
             },
-            THREE: THREE,
-            saveState: (data) => { if (currentGameData) localStorage.setItem(`ax3d_save_${currentGameData.id}`, JSON.stringify(data)); },
-            loadState: () => { if (currentGameData) { const save = localStorage.getItem(`ax3d_save_${currentGameData.id}`); return save? JSON.parse(save) : null; } return null; }
+            objects: new Map() // Mappe l'ID binaire de ton objet (ex: 0x01) -> le Mesh Three.js
         };
 
-        // Web Worker inline pour déchiffrement hors thread principal
-        const workerCode = `
-            self.onmessage = async (e) => {
-                const { type, payload } = e.data;
-                if (type === 'decrypt') {
-                    try {
-                        const { buffer, key } = payload;
-                        const view = new DataView(buffer);
+        // --- MACHINE VIRTUELLE AX3D BINDING TEMPS RÉEL (AXVM v4) ---
+        class AXVirtualMachine {
+            constructor(buffer) {
+                this.buffer = buffer;
+                this.view = new DataView(buffer);
+                this.pc = 16; // On passe la signature AX3D (En-tête de 16 octets)
+                this.updateAddress = 0;
+                this.isInitialized = false;
+            }
 
-                        const version = view.getUint32(8, true);
-                        if (version!== 3) throw new Error('Not v3');
+            // Étape d'initialisation (Lit le binaire jusqu'au marqueur 0xFF)
+            initScene() {
+                while (this.pc < this.buffer.byteLength) {
+                    const opcode = this.view.getUint8(this.pc);
+                    this.pc++;
 
-                        let offset = 16;
-                        const iv = new Uint8Array(buffer, offset, 12);
-                        offset += 12;
-                        offset += 32; // Skip SHA256
-
-                        const headerLen = view.getUint32(offset, true);
-                        offset += 4;
-                        offset += headerLen; // Skip header
-
-                        const jsLen = view.getUint32(offset, true);
-                        offset += 4;
-                        const jsEnc = new Uint8Array(buffer, offset, jsLen);
-
-                        const keyBytes = new TextEncoder().encode(key);
-                        const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['decrypt']);
-
-                        const jsGzip = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, cryptoKey, jsEnc.slice(12));
-
-                        const ds = new DecompressionStream('gzip');
-                        const stream = new Blob([jsGzip]).stream().pipeThrough(ds);
-                        const code = await new Response(stream).text();
-
-                        self.postMessage({ type: 'success', code: code });
-                    } catch (err) {
-                        self.postMessage({ type: 'error', error: err.message });
+                    if (opcode === 0xFF) { // Marqueur de fin de ton init d'après tes specs !
+                        this.updateAddress = this.pc; // Sauvegarde l'adresse du bloc update
+                        this.isInitialized = true;
+                        break;
                     }
+
+                    this.executeOpcode(opcode, true);
                 }
-            };
-        `;
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        worker = new Worker(URL.createObjectURL(blob));
+            }
 
-        function showLoading(text) {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            document.getElementById('loadingText').textContent = text;
+            // Boucle de rafraîchissement temps réel (Exécutée à chaque Frame / 60 FPS)
+            tick() {
+                if (!this.isInitialized || this.updateAddress === 0) return;
+                this.pc = this.updateAddress; // Rembobine le pointeur vers la boucle active
+
+                while (this.pc < this.buffer.byteLength) {
+                    const opcode = this.view.getUint8(this.pc);
+                    this.pc++;
+                    this.executeOpcode(opcode, false);
+                }
+            }
+
+            executeOpcode(opcode, isInitPhase) {
+                // EXEMPLES DE MAPPAGE DE TES OPCODES ACTUELS BASÉS SUR TON HEXDUMP
+                switch(opcode) {
+                    case 0x01: { // DÉCLARATION / INSTANCIATION OBJET
+                        const objId = this.view.getUint8(this.pc++);
+                        const typeId = this.view.getUint8(this.pc++); // Cube, etc.
+                        if (isInitPhase && !window.AX3D.objects.has(objId)) {
+                            const geometry = new THREE.BoxGeometry(1, 1, 1);
+                            const material = new THREE.MeshPhongMaterial({ color: 0x6366f1 });
+                            const mesh = new THREE.Mesh(geometry, material);
+                            scene.add(mesh);
+                            window.AX3D.objects.set(objId, mesh);
+                        }
+                        break;
+                    }
+                    case 0x02: { // MODIFICATION POSITION (X, Y, Z via Float32)
+                        const objId = this.view.getUint8(this.pc++);
+                        const x = this.view.getFloat32(this.pc, true); this.pc += 4;
+                        const y = this.view.getFloat32(this.pc, true); this.pc += 4;
+                        const z = this.view.getFloat32(this.pc, true); this.pc += 4;
+                        
+                        const mesh = window.AX3D.objects.get(objId);
+                        if (mesh) mesh.position.set(x, y, z);
+                        break;
+                    }
+                    case 0x05: { // APPLICATION COULEUR (RGB)
+                        const objId = this.view.getUint8(this.pc++);
+                        const r = this.view.getUint8(this.pc++);
+                        const g = this.view.getUint8(this.pc++);
+                        const b = this.view.getUint8(this.pc++);
+                        
+                        const mesh = window.AX3D.objects.get(objId);
+                        if (mesh && mesh.material) {
+                            mesh.material.color.setRGB(r/255, g/255, b/255);
+                        }
+                        break;
+                    }
+                    case 0x0A: { // LOGIQUE DU STICK : LECTURE DES INPUTS TEMPS RÉEL (Exemple de ton update {})
+                        const objId = this.view.getUint8(this.pc++);
+                        const mesh = window.AX3D.objects.get(objId);
+                        if (mesh) {
+                            // Injecte directement les valeurs lues sur ton stick tactile HTML
+                            mesh.position.x += window.AX3D.input.leftStick.x * 0.1;
+                            mesh.position.z += window.AX3D.input.leftStick.y * 0.1;
+                        }
+                        break;
+                    }
+                    default:
+                        // Si opcode inconnu, saute l'octet pour éviter de corrompre le décodage binaire
+                        break;
+                }
+            }
         }
 
-        function updateProgress(percent) {
-            document.getElementById('loadingBar').style.width = percent + '%';
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('loadingBar').style.width = '0%';
-        }
+        let vmInstance = null;
 
         function initRenderer() {
             const canvas = document.getElementById('gameCanvas');
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setClearColor(0x0a0a0f, 1);
-            camera.position.z = 5;
-            scene.add(new THREE.AmbientLight(0x404040, 2));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-            dirLight.position.set(5, 5, 5);
+            
+            camera.position.set(0, 3, 7);
+            camera.lookAt(0, 0, 0);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 8, 5);
             scene.add(dirLight);
         }
 
         function animate() {
             animationId = requestAnimationFrame(animate);
-            if (currentGame && currentGame.update) currentGame.update();
+            if (vmInstance) {
+                vmInstance.tick(); // Exécute ton binaire en boucle
+            }
             renderer.render(scene, camera);
         }
 
-        function resizeCanvas() {
-            if (!camera ||!renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-        window.addEventListener('resize', resizeCanvas);
+        // CHARGEMENT DU FICHIER BINAIRE AX REÇU PAR LE FORMULAIRE
+        document.getElementById('gameFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        function updateLibrary() {
-            const grid = document.getElementById('gameGrid');
-            const empty = document.getElementById('emptyLibrary');
-            const count = document.getElementById('gameCount');
-            if (gameLibrary.length === 0) {
-                grid.innerHTML = '';
-                empty.style.display = 'flex';
-                count.textContent = '0 games';
+            const buffer = await file.arrayBuffer();
+            const view = new DataView(buffer);
+
+            // Vérification de ta signature "AX3D"
+            if (view.getUint8(0) !== 0x41 || view.getUint8(1) !== 0x58 || view.getUint8(2) !== 0x33 || view.getUint8(3) !== 0x44) {
+                alert("Format de fichier .ax non valide ! Signature manquante.");
                 return;
             }
-            empty.style.display = 'none';
-            count.textContent = `${gameLibrary.length} game${gameLibrary.length > 1? 's' : ''}`;
-            grid.innerHTML = gameLibrary.map((game, idx) => `
-                <div class="game-card glass rounded-2xl p-4 flex flex-col" onclick="launchGame(${idx})">
-                    <div class="aspect-square rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 mb-3 flex items-center justify-center">
-                        <div class="logo-font text-5xl font-black text-white/20">AX</div>
-                    </div>
-                    <h3 class="font-bold text-sm mb-1 truncate">${game.name}</h3>
-                    <p class="text-xs text-gray-500">v${game.version || 1} • ${(game.size / 1024 / 1024).toFixed(1)} MB</p>
-                </div>
-            `).join('');
-        }
 
-        window.launchGame = (idx) => {
-            const game = gameLibrary[idx];
-            currentGameData = game;
-            loadGameFromCode(game.code, game.name);
+            activeGameBuffer = buffer;
+            launchGame();
+        });
+
+        function launchGame() {
+            if (!activeGameBuffer) return;
+
+            // Nettoyage de l'ancienne scène
+            window.AX3D.objects.forEach(mesh => scene.remove(mesh));
+            window.AX3D.objects.clear();
+
+            // Création de l'instance de ta VM avec ton binaire
+            vmInstance = new AXVirtualMachine(activeGameBuffer);
+            vmInstance.initScene(); // Prépare et décode statiquement la scène
+
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'flex';
             document.getElementById('controller').style.display = 'block';
-        };
+
+            animate();
+        }
 
         function quitToLibrary() {
             if (animationId) cancelAnimationFrame(animationId);
-            if (currentGame && currentGame.cleanup) currentGame.cleanup();
-            currentGame = null;
-            currentGameData = null;
+            vmInstance = null;
             document.getElementById('homeScreen').style.display = 'flex';
             document.getElementById('gameScreen').style.display = 'none';
             document.getElementById('controller').style.display = 'none';
             document.getElementById('menuPanel').classList.remove('open');
         }
 
-        document.getElementById('gameFile').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            showLoading('Reading file...');
-            updateProgress(10);
-
-            try {
-                const buffer = await file.arrayBuffer();
-                updateProgress(30);
-
-                if (buffer.byteLength < 16) throw new Error('File too small');
-                const view = new DataView(buffer);
-                const sig = [0x41, 0x58, 0x33, 0x44];
-                for (let i = 0; i < 4; i++) {
-                    if (view.getUint8(i)!== sig[i]) throw new Error('Invalid AX3D signature');
-                }
-
-                const version = view.getUint32(8, true);
-                let code = null;
-                let gameName = file.name.replace('.ax', '');
-
-                if (version === 1) {
-                    showLoading('Loading v1...');
-                    const codeSize = view.getUint32(12, true);
-                    if (16 + codeSize > buffer.byteLength) throw new Error('Corrupted v1 file');
-                    const codeBytes = new Uint8Array(buffer, 16, codeSize);
-                    code = new TextDecoder().decode(codeBytes);
-                    updateProgress(100);
-
-                } else if (version === 3) {
-                    showLoading('Decrypting v3...');
-                    updateProgress(40);
-
-                    // Envoie au worker pour déchiffrement
-                    worker.postMessage({ type: 'decrypt', payload: { buffer: buffer, key: AX3D_KEY } });
-
-                    code = await new Promise((resolve, reject) => {
-                        worker.onmessage = (e) => {
-                            if (e.data.type === 'success') {
-                                updateProgress(90);
-                                resolve(e.data.code);
-                            } else {
-                                reject(new Error(e.data.error));
-                            }
-                        };
-                    });
-
-                } else {
-                    throw new Error('Unsupported version: ' + version);
-                }
-
-                const gameId = Date.now().toString();
-                gameLibrary.push({
-                    id: gameId,
-                    name: gameName,
-                    code: code,
-                    size: file.size,
-                    version: version
-                });
-                localStorage.setItem('ax3d_library', JSON.stringify(gameLibrary));
-                updateLibrary();
-                e.target.value = '';
-                hideLoading();
-                alert(`Game loaded! v${version} • ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-
-            } catch (err) {
-                hideLoading();
-                alert('Error: ' + err.message);
-                console.error(err);
-            }
-        });
-
-        function loadGameFromCode(code, filename) {
-            if (animationId) cancelAnimationFrame(animationId);
-            if (currentGame && currentGame.cleanup) currentGame.cleanup();
-            while(scene.children.length > 0) scene.remove(scene.children[0]);
-            scene.add(new THREE.AmbientLight(0x404040, 2));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-            dirLight.position.set(5, 5, 5);
-            scene.add(dirLight);
-            try {
-                const gameModule = new Function('THREE', 'AX3D', 'scene', 'camera', code);
-                currentGame = gameModule(THREE, window.AX3D, scene, camera) || {};
-                animate();
-            } catch (err) {
-                alert('Error running game: ' + err.message);
-            }
-        }
-
+        // --- GESTION DES INTERFACES ET DE LA MANETTE TACTILE ---
         document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('menuPanel').classList.add('open'));
         document.getElementById('closeMenu').addEventListener('click', () => document.getElementById('menuPanel').classList.remove('open'));
         document.getElementById('quitBtn').addEventListener('click', quitToLibrary);
-        document.getElementById('saveBtn').addEventListener('click', () => { if (currentGame && currentGame.save) currentGame.save(); alert('State saved!'); });
-        document.getElementById('loadBtn').addEventListener('click', () => { if (currentGame && currentGame.load) currentGame.load(); });
-        document.getElementById('resetBtn').addEventListener('click', () => { if (currentGameData) loadGameFromCode(currentGameData.code, currentGameData.name); });
+        document.getElementById('resetBtn').addEventListener('click', launchGame);
 
-        const keyMap = { 'ArrowUp': 'dpadUp', 'ArrowDown': 'dpadDown', 'ArrowLeft': 'dpadLeft', 'ArrowRight': 'dpadRight', 'j': 'x', 'k': 'a', 'l': 'b', 'i': 'y', 'Shift': 'lt', 'Control': 'rt' };
-        function setButtonState(key, pressed) {
-            document.querySelectorAll(`[data-key="${key}"]`).forEach(btn => { if (pressed) btn.classList.add('active'); else btn.classList.remove('active'); });
-            window.AX3D.input.keys[pressed? 'add' : 'delete'](key);
-            if (keyMap[key]) window.AX3D.input.buttons[keyMap[key]] = pressed;
-        }
-        window.addEventListener('keydown', (e) => {
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
-            setButtonState(e.key, true);
-            if (e.key === 'w') window.AX3D.input.leftStick.y = -1;
-            if (e.key === 's') window.AX3D.input.leftStick.y = 1;
-            if (e.key === 'a') window.AX3D.input.leftStick.x = -1;
-            if (e.key === 'd') window.AX3D.input.leftStick.x = 1;
-        });
-        window.addEventListener('keyup', (e) => {
-            setButtonState(e.key, false);
-            if (e.key === 'w' || e.key === 's') window.AX3D.input.leftStick.y = 0;
-            if (e.key === 'a' || e.key === 'd') window.AX3D.input.leftStick.x = 0;
-        });
-        document.querySelectorAll('[data-key]').forEach(btn => {
-            const key = btn.dataset.key;
-            btn.addEventListener('mousedown', (e) => { e.preventDefault(); setButtonState(key, true); });
-            btn.addEventListener('mouseup', () => setButtonState(key, false));
-            btn.addEventListener('mouseleave', () => setButtonState(key, false));
-            btn.addEventListener('touchstart', (e) => { e.preventDefault(); setButtonState(key, true); });
-            btn.addEventListener('touchend', () => setButtonState(key, false));
-        });
-        function setupStick(stickId, nubId, inputTarget) {
+        // MODAL INFO CRÉATEUR
+        const modal = document.getElementById('creatorModal');
+        document.getElementById('creatorBtn').addEventListener('click', () => modal.classList.remove('hidden'));
+        document.getElementById('closeCreatorModal').addEventListener('click', () => modal.classList.add('hidden'));
+
+        // CONFIGURATION DES TOUCHES DIRECTES ET JOYSTICK
+        function setupStick(stickId, nubId) {
             const stick = document.getElementById(stickId);
             const nub = document.getElementById(nubId);
             let active = false;
+
             function updateStick(clientX, clientY) {
                 const rect = stick.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
@@ -435,68 +354,25 @@
                 let deltaY = clientY - centerY;
                 const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
                 const maxDist = rect.width / 2 - 28;
+
                 if (dist > maxDist) { deltaX = (deltaX / dist) * maxDist; deltaY = (deltaY / dist) * maxDist; }
                 nub.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
-                window.AX3D.input[inputTarget].x = deltaX / maxDist;
-                window.AX3D.input[inputTarget].y = deltaY / maxDist;
+                
+                // Transmet les inputs à l'état global lu par ta VM
+                window.AX3D.input.leftStick.x = deltaX / maxDist;
+                window.AX3D.input.leftStick.y = deltaY / maxDist;
             }
-            function resetStick() {
-                nub.style.transform = 'translate(-50%, -50%)';
-                window.AX3D.input[inputTarget].x = 0;
-                window.AX3D.input[inputTarget].y = 0;
-                active = false;
-            }
+
             stick.addEventListener('mousedown', (e) => { active = true; updateStick(e.clientX, e.clientY); });
             stick.addEventListener('touchstart', (e) => { active = true; updateStick(e.touches[0].clientX, e.touches[0].clientY); });
             window.addEventListener('mousemove', (e) => { if (active) updateStick(e.clientX, e.clientY); });
             window.addEventListener('touchmove', (e) => { if (active) updateStick(e.touches[0].clientX, e.touches[0].clientY); });
-            window.addEventListener('mouseup', resetStick);
-            window.addEventListener('touchend', resetStick);
+            window.addEventListener('mouseup', () => { nub.style.transform = 'translate(-50%, -50%)'; window.AX3D.input.leftStick = {x:0, y:0}; active = false; });
+            window.addEventListener('touchend', () => { nub.style.transform = 'translate(-50%, -50%)'; window.AX3D.input.leftStick = {x:0, y:0}; active = false; });
         }
-        setupStick('leftStick', 'leftStickNub', 'leftStick');
-        setupStick('rightStick', 'rightStickNub', 'rightStick');
-
-        window.downloadSample = () => {
-            const code = `const cube=new THREE.Mesh(new THREE.BoxGeometry(2,2),new THREE.MeshPhongMaterial({color:0x6366f1,emissive:0x4338ca,emissiveIntensity:0.3}));scene.add(cube);const grid=new THREE.GridHelper(10,10,0x6366f1,0x1e293b);grid.position.y=-2;scene.add(grid);camera.position.set(0,2,6);camera.lookAt(0,0,0);let time=0;return{update:function(){time+=0.016;cube.position.x+=AX3D.input.leftStick.x*0.1;cube.position.z+=AX3D.input.leftStick.y*0.1;cube.rotation.y+=AX3D.input.rightStick.x*0.05;cube.rotation.x+=AX3D.input.rightStick.y*0.05;if(AX3D.input.buttons.a){cube.position.y=Math.abs(Math.sin(time*5))*2;}else{cube.position.y=0;}if(AX3D.input.buttons.b){cube.material.color.setHex(0xef4444);}else if(AX3D.input.buttons.x){cube.material.color.setHex(0x3b82f6);}else if(AX3D.input.buttons.y){cube.material.color.setHex(0xfbbf24);}else{cube.material.color.setHex(0x6366f1);}const scale=1+(AX3D.input.buttons.rt?0.5:0)-(AX3D.input.buttons.lt?0.3:0);cube.scale.setScalar(scale);},cleanup:function(){scene.remove(cube);scene.remove(grid);}};`;
-            const encoder = new TextEncoder();
-            const codeBytes = encoder.encode(code);
-            const buffer = new ArrayBuffer(16 + codeBytes.length);
-            const view = new DataView(buffer);
-            view.setUint8(0, 0x41); view.setUint8(1, 0x58); view.setUint8(2, 0x33); view.setUint8(3, 0x44);
-            view.setUint8(4, 0x01); view.setUint8(5, 0x9F); view.setUint8(6, 0x3B); view.setUint8(7, 0x2A);
-            view.setUint32(8, 1, true);
-            view.setUint32(12, codeBytes.length, true);
-            new Uint8Array(buffer).set(codeBytes, 16);
-            const blob = new Blob([buffer], {type: 'application/octet-stream'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'sample.ax';
-            a.click();
-            URL.revokeObjectURL(url);
-        };
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => console.error('SW error:', err));
-            });
-        }
+        setupStick('leftStick', 'leftStickNub');
 
         initRenderer();
-updateLibrary();
-
-console.log(
-    '%cAX3D v3 Streaming %cloaded - GB Support',
-    'color: #6366f1; font-weight: bold; font-size: 16px;',
-    'color: #94a3b8;'
-);
-
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>
-eruda.init();
-</script>
-
+    </script>
 </body>
 </html>
