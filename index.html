@@ -27,12 +27,11 @@
    .glow-text { text-shadow: 0 0 25px rgba(99, 102, 241, 0.6); }
     @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
    .slide-in { animation: slideIn 0.3s ease-out; }
-   .game-card { transition: all 0.2s ease; cursor: pointer; }
-   .game-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3); }
+   .game-card { transition: all 0.2s ease; cursor: pointer; position: relative; }
+   .game-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2); }
     #menuPanel, #infoPanel { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     #menuPanel.open, #infoPanel.open { transform: translateX(0); }
     #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: transparent !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important; }
-
 </style>
 </head>
 <body class="text-gray-100">
@@ -69,7 +68,7 @@
             </div>
 
             <main class="flex-1 overflow-y-auto p-6">
-                <div id="gameGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+                <div id="gameGrid" class="max-w-4xl mx-auto flex flex-col gap-2"></div>
                 <div id="emptyLibrary" class="flex flex-col items-center justify-center h-full text-center">
                     <div class="logo-font text-9xl font-black text-gray-950 mb-6">AX</div>
                     <h2 class="text-3xl font-bold mb-3 text-gray-400">Prêt pour le Bytecode</h2>
@@ -148,28 +147,18 @@
                     <p class="text-xs text-emerald-400 font-mono mb-3">Lead Engine & Compiler Architect</p>
                     <p class="text-gray-400 leading-relaxed">Concepteur originaire de la <b>République Démocratique du Congo (RDC)</b>. Firmin a développé l'architecture VM AX3D pour s'affranchir du JavaScript classique et exécuter du bytecode ultra-compact directement dans le navigateur.</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-indigo-400 mb-2 uppercase text-xs tracking-wider logo-font">Pipeline de Compilation</h3>
                     <div class="border-l-2 border-indigo-500/30 pl-4 space-y-4">
                         <div>
                             <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono">1. Fichier .axs</span>
-                            <p class="text-xs text-gray-400 mt-1">Code source textuel à haut niveau (ex: <code class="text-gray-200">object cube1 cube</code>, <code class="text-gray-200">cube1.color 255 0 0</code>).</p>
+                            <p class="text-xs text-gray-400 mt-1">Code source textuel à haut niveau.</p>
                         </div>
                         <div>
                             <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">2. ax_compiler.py</span>
-                            <p class="text-xs text-gray-400 mt-1">Le script Python scanne les chaînes, convertit les tokens en opcodes numériques, et compacte les flottants (X, Y, Z, R, G, B) au format binaire standard IEEE 754.</p>
-                        </div>
-                        <div>
-                            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">3. Fichier .ax (Binaire)</span>
-                            <p class="text-xs text-gray-400 mt-1">Fichier de quelques octets s'ouvrant par le Magic Header <code class="text-gray-200">41 58 33 44</code> (<code class="text-gray-200">AX3D</code>) suivi des tables d'opcodes et des valeurs d'initialisation des structures.</p>
+                            <p class="text-xs text-gray-400 mt-1">Le script Python convertit les tokens en opcodes numériques.</p>
                         </div>
                     </div>
-                </div>
-
-                <div class="p-4 rounded-xl bg-gray-950/50 border border-gray-800">
-                    <h3 class="font-bold text-gray-100 mb-2">Comment ce moteur lit le binaire :</h3>
-                    <p class="text-xs text-gray-400 leading-relaxed">Au lieu d'utiliser un interpréteur JS, ce moteur utilise l'API JavaScript <code class="text-indigo-400">DataView</code> pour lire séquentiellement les octets du fichier binaire, instancier dynamiquement les géométries 3D nativas et lier l'input de l'utilisateur directement à la structure mémoire virtuelle.</p>
                 </div>
             </div>
         </div>
@@ -187,6 +176,7 @@
         let virtualObjects = {};
         let cameraTargetId = null;
         let gameLibrary = JSON.parse(localStorage.getItem('ax3d_library_bin') || '[]');
+        let holdTimer = null;
 
         window.AX3D = {
             input: {
@@ -220,7 +210,6 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setClearColor(0x0a0a0f, 1);
             
-            // Éclairage de la scène
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(10, 15, 10);
@@ -233,53 +222,41 @@
             renderer.render(scene, camera);
         }
 
-        // --- PARSER DU SYSTEME BINAIRE AX3D DE FIRMIN ---
         function loadBinaryGame(buffer) {
             if (animationId) cancelAnimationFrame(animationId);
             if (currentGame && currentGame.cleanup) currentGame.cleanup();
             
-            // Nettoyage complet
             while(scene.children.length > 0) scene.remove(scene.children[0]);
             virtualObjects = {};
             
-            // Remise en place des lumières
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(10, 15, 10);
             scene.add(dirLight);
 
             const view = new DataView(buffer);
-            
-            // Contrôle du Magic Header "AX3D" (0x41583344)
             if (view.getUint32(0, false) !== 0x41583344) {
                 alert("Erreur: Signature binaire AX3D invalide.");
                 return;
             }
 
-            // Génération dynamique basée sur les structures de Arena.axs
-            // Instanciation de cube1 et cube2 décodés depuis le binaire
             createVirtualObject('cube1', 0xff0000, 0.0, 1.0, 0.0);
             createVirtualObject('cube2', 0x0000ff, 3.0, 1.0, 0.0);
             cameraTargetId = 'cube1';
 
-            // Boucle d'exécution native du Bytecode
             currentGame = {
                 update: function() {
                     const speed = 0.08;
-                    
-                    // Émulation directe de : cube1.move(stick) via l'API Input
                     if (virtualObjects['cube1']) {
                         virtualObjects['cube1'].position.x += window.AX3D.input.leftStick.x * speed;
                         virtualObjects['cube1'].position.z += window.AX3D.input.leftStick.y * speed;
                         
-                        // Support Clavier alternatif ZQSD/Flèches
                         if(window.AX3D.input.keys.has('ArrowLeft') || window.AX3D.input.keys.has('a')) virtualObjects['cube1'].position.x -= speed;
                         if(window.AX3D.input.keys.has('ArrowRight') || window.AX3D.input.keys.has('d')) virtualObjects['cube1'].position.x += speed;
                         if(window.AX3D.input.keys.has('ArrowUp') || window.AX3D.input.keys.has('w')) virtualObjects['cube1'].position.z -= speed;
                         if(window.AX3D.input.keys.has('ArrowDown') || window.AX3D.input.keys.has('s')) virtualObjects['cube1'].position.z += speed;
                     }
 
-                    // Émulation de : camera.follow(cube1)
                     if (cameraTargetId && virtualObjects[cameraTargetId]) {
                         const targetPos = virtualObjects[cameraTargetId].position;
                         camera.position.set(targetPos.x, targetPos.y + 4, targetPos.z + 7);
@@ -293,7 +270,6 @@
                     virtualObjects = {};
                 }
             };
-
             animate();
         }
 
@@ -306,7 +282,8 @@
             virtualObjects[id] = mesh;
         }
 
-        function updateLibrary() {
+        // --- UPDATE DE LA GRILLE (STYLE PSP MINI + LONG PRESS 5S) ---
+        window.updateLibrary = function() {
             const grid = document.getElementById('gameGrid');
             const empty = document.getElementById('emptyLibrary');
             const count = document.getElementById('gameCount');
@@ -318,20 +295,60 @@
             }
             empty.style.display = 'none';
             count.textContent = `${gameLibrary.length} app exploitable`;
+            
             grid.innerHTML = gameLibrary.map((game, idx) => `
-                <div class="game-card glass rounded-2xl p-4 flex flex-col" onclick="launchGame(${idx})">
-                    <div class="aspect-square rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-600 mb-3 flex items-center justify-center">
-                        <div class="logo-font text-4xl font-black text-white/30">.AX</div>
+                <div class="game-card glass rounded-xl p-3 flex items-center justify-between border border-white/5 select-none" 
+                     data-index="${idx}"
+                     onmousedown="window.startHold(event, ${idx})" 
+                     onmouseup="window.clearHold()" 
+                     onmouseleave="window.clearHold()"
+                     ontouchstart="window.startHold(event, ${idx})" 
+                     ontouchend="window.clearHold()">
+                    
+                    <div class="flex items-center gap-4 flex-1" onclick="window.launchGame(${idx})">
+                        <div class="w-16 h-10 rounded-lg bg-gradient-to-r from-emerald-600/50 to-indigo-600/50 flex items-center justify-center border border-white/10 flex-shrink-0">
+                            <div class="logo-font text-xs font-black text-white/50">.AX</div>
+                        </div>
+                        <div class="truncate">
+                            <h3 class="font-bold text-sm text-gray-200 truncate">${game.name}</h3>
+                            <p class="text-[11px] text-gray-500 font-mono">${game.size} bytes • RDC VM</p>
+                        </div>
                     </div>
-                    <h3 class="font-bold text-sm mb-1 truncate">${game.name}</h3>
-                    <p class="text-xs text-gray-500">Bytecode Executable • ${game.size} bytes</p>
+
+                    <button id="del-btn-${idx}" class="hidden ml-2 px-3 py-1.5 text-xs font-semibold bg-red-600/80 hover:bg-red-600 text-white rounded-lg shadow-lg border border-red-500/40 transition-all animate-bounce" onclick="window.deleteGame(event, ${idx})">
+                        Supprimer
+                    </button>
                 </div>
             `).join('');
-        }
+        };
+
+        // --- LOGIQUE DETENTION DE 5 SECONDES ---
+        window.startHold = function(e, idx) {
+            // Évite le déclenchement si on clique directement sur supprimer
+            if(e.target.tagName.toLowerCase() === 'button') return;
+            
+            window.clearHold();
+            holdTimer = setTimeout(() => {
+                const btn = document.getElementById(`del-btn-${idx}`);
+                if (btn) btn.classList.remove('hidden');
+            }, 5000); // 5000ms = 5 secondes
+        };
+
+        window.clearHold = function() {
+            if (holdTimer) clearTimeout(holdTimer);
+        };
+
+        window.deleteGame = function(e, idx) {
+            e.stopPropagation(); // Évite de lancer le jeu au clic
+            if(confirm("Supprimer ce fichier binaire de la bibliothèque ?")) {
+                gameLibrary.splice(idx, 1);
+                localStorage.setItem('ax3d_library_bin', JSON.stringify(gameLibrary));
+                window.updateLibrary();
+            }
+        };
 
         window.launchGame = (idx) => {
             const game = gameLibrary[idx];
-            // Conversion de la chaîne base64 sauvegardée en ArrayBuffer brut
             const binaryString = window.atob(game.rawBin);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
@@ -352,9 +369,9 @@
             document.getElementById('gameScreen').style.display = 'none';
             document.getElementById('controller').style.display = 'none';
             document.getElementById('menuPanel').classList.remove('open');
+            window.updateLibrary();
         }
 
-        // --- MANAGEMENT DU CHARGEMENT DE ARENA.AX ---
         document.getElementById('gameFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -366,7 +383,6 @@
                 const buffer = await file.arrayBuffer();
                 updateProgress(80);
 
-                // Sauvegarde locale sous forme de String base64
                 let binary = '';
                 const bytes = new Uint8Array(buffer);
                 for (let i = 0; i < bytes.byteLength; i++) {
@@ -374,18 +390,18 @@
                 }
                 const base64Bin = window.btoa(binary);
 
-                gameLibrary = [{
+                // Ajout à la bibliothèque existante au lieu de l'écraser
+                gameLibrary.push({
                     name: file.name,
                     size: file.size,
                     rawBin: base64Bin
-                }];
+                });
                 
                 localStorage.setItem('ax3d_library_bin', JSON.stringify(gameLibrary));
-                updateLibrary();
+                window.updateLibrary();
                 hideLoading();
                 
-                // Lancement direct
-                window.launchGame(0);
+                window.launchGame(gameLibrary.length - 1);
 
             } catch (err) {
                 hideLoading();
@@ -393,24 +409,20 @@
             }
         });
 
-        // UI Listeners
         document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('menuPanel').classList.add('open'));
         document.getElementById('closeMenu').addEventListener('click', () => document.getElementById('menuPanel').classList.remove('open'));
         document.getElementById('quitBtn').addEventListener('click', quitToLibrary);
-        document.getElementById('resetBtn').addEventListener('click', () => { if(gameLibrary.length > 0) window.launchGame(0); });
+        document.getElementById('resetBtn').addEventListener('click', () => { if(gameLibrary.length > 0) window.launchGame(gameLibrary.length - 1); });
         
-        // Modale Info Firmin
         document.getElementById('openInfoBtn').addEventListener('click', () => document.getElementById('infoPanel').classList.add('open'));
         document.getElementById('closeInfo').addEventListener('click', () => document.getElementById('infoPanel').classList.remove('open'));
 
-        // Controls Logic
         function setButtonState(key, pressed) {
             window.AX3D.input.keys[pressed ? 'add' : 'delete'](key);
         }
         window.addEventListener('keydown', (e) => setButtonState(e.key, true));
         window.addEventListener('keyup', (e) => setButtonState(e.key, false));
 
-        // Setup Stick
         function setupStick(stickId, nubId, inputTarget) {
             const stick = document.getElementById(stickId);
             const nub = document.getElementById(nubId);
@@ -451,7 +463,7 @@
         });
 
         initRenderer();
-        updateLibrary();
+        window.updateLibrary();
     </script>
 </body>
 </html>
