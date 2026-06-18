@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<title>AX3D Streaming - Engine</title>
+<title>AX3D Streaming - True Binary Engine</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Inter:wght@300;400;500;600&display=swap');
@@ -27,11 +27,13 @@
    .glow-text { text-shadow: 0 0 25px rgba(99, 102, 241, 0.6); }
     @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
    .slide-in { animation: slideIn 0.3s ease-out; }
-   .game-card { transition: all 0.2s ease; cursor: pointer; position: relative; }
-   .game-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2); }
-    #menuPanel, #infoPanel { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    #menuPanel.open, #infoPanel.open { transform: translateX(0); }
-    #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: transparent !important; backdrop-filter: none !important; border: none !important; box-shadow: none !important; }
+   .game-card { transition: all 0.2s ease; cursor: pointer; }
+   .game-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3); }
+    #menuPanel { transform: translateX(100%); transition: transform 0.3s; }
+    #menuPanel.open { transform: translateX(0); }
+    #controller { padding-bottom: calc(2rem + var(--safe-bottom)); background: rgba(10, 10, 15, 0.3)!important; backdrop-filter: blur(4px); }
+    #controller.glass { background: transparent!important; backdrop-filter: none!important; border: none!important; box-shadow: none!important; }
+    #loadingBar { transition: width 0.2s ease; }
 </style>
 </head>
 <body class="text-gray-100">
@@ -43,36 +45,30 @@
                     <div class="logo-font text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 glow-text">AX3D</div>
                     <div class="h-10 w-px bg-gray-700"></div>
                     <div>
-                        <h1 class="logo-font text-2xl font-bold">Bytecode Engine</h1>
-                        <p class="text-xs text-gray-500" id="gameCount">0 binary loaded</p>
+                        <h1 class="logo-font text-2xl font-bold">Library</h1>
+                        <p class="text-xs text-gray-500" id="gameCount">0 games</p>
                     </div>
                 </div>
-                
-                <div class="flex items-center gap-3">
-                    <button id="openInfoBtn" class="px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium transition-all text-sm flex items-center gap-2">
-                        🇨🇩 Creator Info
-                    </button>
-                    <label for="gameFile" class="cursor-pointer px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all font-semibold shadow-lg shadow-indigo-500/30 text-sm">
-                        + Load Arena.ax
-                    </label>
-                    <input type="file" id="gameFile" accept=".ax" class="hidden">
-                </div>
+                <label for="gameFile" class="cursor-pointer px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all font-semibold shadow-lg shadow-indigo-500/30">
+                    + Load .ax
+                </label>
+                <input type="file" id="gameFile" accept=".ax" class="hidden">
             </header>
 
             <div id="loadingOverlay" class="hidden absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
-                <div class="logo-font text-6xl font-black text-indigo-500 mb-6 animate-pulse">READING BINARY</div>
+                <div class="logo-font text-6xl font-black text-indigo-500 mb-6">LOADING BINARY</div>
                 <div class="w-80 h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div id="loadingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-0"></div>
                 </div>
-                <p class="text-sm text-gray-400 mt-4" id="loadingText">Parsing custom chunks...</p>
+                <p class="text-sm text-gray-400 mt-4" id="loadingText">Parsing opcodes...</p>
             </div>
 
             <main class="flex-1 overflow-y-auto p-6">
-                <div id="gameGrid" class="max-w-4xl mx-auto flex flex-col gap-2"></div>
+                <div id="gameGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
                 <div id="emptyLibrary" class="flex flex-col items-center justify-center h-full text-center">
-                    <div class="logo-font text-9xl font-black text-gray-950 mb-6">AX</div>
-                    <h2 class="text-3xl font-bold mb-3 text-gray-400">Prêt pour le Bytecode</h2>
-                    <p class="text-gray-600 mb-8 max-w-md">Compile ton fichier <span class="text-indigo-400">Arena.axs</span> avec ton script Python et charge le fichier binaire obtenu ici.</p>
+                    <div class="logo-font text-9xl font-black text-gray-900 mb-6">AX</div>
+                    <h2 class="text-3xl font-bold mb-3 text-gray-400">No Games Yet</h2>
+                    <p class="text-gray-600 mb-8 max-w-md">Load a real binary .ax file. The compiler bytecodes will be interpreted directly.</p>
                 </div>
             </main>
         </div>
@@ -89,7 +85,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
 
-            <div id="controller" class="absolute bottom-0 left-0 right-0 p-4 hidden slide-in">
+            <div id="controller" class="glass absolute bottom-0 left-0 right-0 p-4 hidden slide-in">
                 <div class="max-w-6xl mx-auto flex items-end justify-between gap-3 pb-5">
                     <div class="flex items-end gap-4">
                         <div id="leftStick" class="stick-area w-28 h-28 rounded-full relative cursor-pointer">
@@ -120,49 +116,19 @@
         <div id="menuPanel" class="fixed top-0 right-0 h-full w-80 glass z-[60] p-6 flex flex-col">
             <div class="flex items-center justify-between mb-8" style="padding-top: var(--safe-top);">
                 <h2 class="logo-font text-2xl font-bold">Game Menu</h2>
-                <button id="closeMenu" class="p-2 rounded-lg hover:bg-white/10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                <button id="closeMenu" class="p-2 rounded-lg hover:bg-white/10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             <div class="flex-1 space-y-3">
                 <button id="resetBtn" class="w-full p-4 rounded-xl glass hover:bg-white/10 transition-all flex items-center gap-3">
-                    <span class="font-medium">Reset Binary View</span>
+                    <span class="font-medium">Reset Game</span>
                 </button>
             </div>
             <button id="quitBtn" class="w-full p-4 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 transition-all flex items-center justify-center gap-3 font-semibold" style="margin-bottom: var(--safe-bottom);">
-                Quit to Engine
+                Quit to Library
             </button>
         </div>
-
-        <div id="infoPanel" class="fixed top-0 right-0 h-full w-96 glass z-[70] p-6 flex flex-col overflow-y-auto shadow-2xl border-l border-emerald-500/20">
-            <div class="flex items-center justify-between mb-6" style="padding-top: var(--safe-top);">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">🇨🇩</span>
-                    <h2 class="logo-font text-xl font-bold text-emerald-400">Creator Profile</h2>
-                </div>
-                <button id="closeInfo" class="p-2 rounded-lg hover:bg-white/10 text-gray-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            
-            <div class="space-y-6 text-sm text-gray-300">
-                <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                    <h3 class="font-bold text-gray-100 text-base mb-1">Firmin</h3>
-                    <p class="text-xs text-emerald-400 font-mono mb-3">Lead Engine & Compiler Architect</p>
-                    <p class="text-gray-400 leading-relaxed">Concepteur originaire de la <b>République Démocratique du Congo (RDC)</b>. Firmin a développé l'architecture VM AX3D pour s'affranchir du JavaScript classique et exécuter du bytecode ultra-compact directement dans le navigateur.</p>
-                </div>
-                <div>
-                    <h3 class="font-bold text-indigo-400 mb-2 uppercase text-xs tracking-wider logo-font">Pipeline de Compilation</h3>
-                    <div class="border-l-2 border-indigo-500/30 pl-4 space-y-4">
-                        <div>
-                            <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono">1. Fichier .axs</span>
-                            <p class="text-xs text-gray-400 mt-1">Code source textuel à haut niveau.</p>
-                        </div>
-                        <div>
-                            <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono">2. ax_compiler.py</span>
-                            <p class="text-xs text-gray-400 mt-1">Le script Python convertit les tokens en opcodes numériques.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script type="importmap">
@@ -174,9 +140,7 @@
 
         let scene, camera, renderer, currentGame = null, animationId = null;
         let virtualObjects = {};
-        let cameraTargetId = null;
-        let gameLibrary = JSON.parse(localStorage.getItem('ax3d_library_bin') || '[]');
-        let holdTimer = null;
+        let gameLibrary = JSON.parse(localStorage.getItem('ax3d_library_bin_v2') || '[]');
 
         window.AX3D = {
             input: {
@@ -222,6 +186,7 @@
             renderer.render(scene, camera);
         }
 
+        // --- DECODEUR DYNAMIQUE DE VRAI BINAIRE AX3D ---
         function loadBinaryGame(buffer) {
             if (animationId) cancelAnimationFrame(animationId);
             if (currentGame && currentGame.cleanup) currentGame.cleanup();
@@ -240,26 +205,119 @@
                 return;
             }
 
-            createVirtualObject('cube1', 0xff0000, 0.0, 1.0, 0.0);
-            createVirtualObject('cube2', 0x0000ff, 3.0, 1.0, 0.0);
-            cameraTargetId = 'cube1';
+            let pc = 16; 
+            let updateBlockStart = 16;
+            let moveCommands = [];
+            let cameraFollowTarget = null;
 
+            // 1. Boucle d'initialisation (lit jusqu'à l'opcode de fin 0xFF)
+            while (pc < buffer.byteLength) {
+                let opcode = view.getUint8(pc);
+                if (opcode === 0xFF) { 
+                    pc++;
+                    updateBlockStart = pc; 
+                    break;
+                }
+
+                if (opcode === 0x01) { // CREATE_OBJECT
+                    let objId = view.getUint8(pc + 1);
+                    const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+                    const material = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    scene.add(mesh);
+                    virtualObjects[objId] = mesh;
+                    pc += 3;
+                } 
+                else if (opcode === 0x02) { // POSITION
+                    let objId = view.getUint8(pc + 1);
+                    let x = view.getFloat32(pc + 2, true);
+                    let y = view.getFloat32(pc + 6, true);
+                    let z = view.getFloat32(pc + 10, true);
+                    if (virtualObjects[objId]) virtualObjects[objId].position.set(x, y, z);
+                    pc += 14;
+                } 
+                else if (opcode === 0x03) { // ROTATION
+                    let objId = view.getUint8(pc + 1);
+                    let x = view.getFloat32(pc + 2, true);
+                    let y = view.getFloat32(pc + 6, true);
+                    let z = view.getFloat32(pc + 10, true);
+                    if (virtualObjects[objId]) virtualObjects[objId].rotation.set(x, y, z);
+                    pc += 14;
+                } 
+                else if (opcode === 0x04) { // SCALE
+                    let objId = view.getUint8(pc + 1);
+                    let x = view.getFloat32(pc + 2, true);
+                    let y = view.getFloat32(pc + 6, true);
+                    let z = view.getFloat32(pc + 10, true);
+                    if (virtualObjects[objId]) virtualObjects[objId].scale.set(x, y, z);
+                    pc += 14;
+                } 
+                else if (opcode === 0x05) { // COLOR RGB (0-255)
+                    let objId = view.getUint8(pc + 1);
+                    let r = view.getUint8(pc + 2);
+                    let g = view.getUint8(pc + 3);
+                    let b = view.getUint8(pc + 4);
+                    if (virtualObjects[objId]) {
+                        virtualObjects[objId].material.color.setRGB(r / 255, g / 255, b / 255);
+                    }
+                    pc += 5;
+                } 
+                else {
+                    pc++;
+                }
+            }
+
+            // 2. Boucle du bloc de mise à jour (Update)
+            pc = updateBlockStart;
+            while (pc < buffer.byteLength) {
+                let opcode = view.getUint8(pc);
+                
+                if (opcode === 0x06) { // MOVE PLAYER
+                    let objId = view.getUint8(pc + 1);
+                    moveCommands.push({ id: objId, type: 'player' });
+                    pc += 2;
+                } 
+                else if (opcode === 0x0D) { // MOVE_AI
+                    let objId = view.getUint8(pc + 1);
+                    moveCommands.push({ id: objId, type: 'ai', seed: Math.random() * 100 });
+                    pc += 2;
+                } 
+                else if (opcode === 0x0C) { // CAMERA_FOLLOW
+                    cameraFollowTarget = view.getUint8(pc + 1);
+                    pc += 2;
+                } 
+                else {
+                    pc++;
+                }
+            }
+
+            // 3. Moteur d'exécution actif
             currentGame = {
                 update: function() {
                     const speed = 0.08;
-                    if (virtualObjects['cube1']) {
-                        virtualObjects['cube1'].position.x += window.AX3D.input.leftStick.x * speed;
-                        virtualObjects['cube1'].position.z += window.AX3D.input.leftStick.y * speed;
+                    
+                    moveCommands.forEach(cmd => {
+                        let mesh = virtualObjects[cmd.id];
+                        if (!mesh) return;
                         
-                        if(window.AX3D.input.keys.has('ArrowLeft') || window.AX3D.input.keys.has('a')) virtualObjects['cube1'].position.x -= speed;
-                        if(window.AX3D.input.keys.has('ArrowRight') || window.AX3D.input.keys.has('d')) virtualObjects['cube1'].position.x += speed;
-                        if(window.AX3D.input.keys.has('ArrowUp') || window.AX3D.input.keys.has('w')) virtualObjects['cube1'].position.z -= speed;
-                        if(window.AX3D.input.keys.has('ArrowDown') || window.AX3D.input.keys.has('s')) virtualObjects['cube1'].position.z += speed;
-                    }
+                        if (cmd.type === 'player') {
+                            mesh.position.x += window.AX3D.input.leftStick.x * speed;
+                            mesh.position.z += window.AX3D.input.leftStick.y * speed;
+                            
+                            if(window.AX3D.input.keys.has('ArrowLeft') || window.AX3D.input.keys.has('a')) mesh.position.x -= speed;
+                            if(window.AX3D.input.keys.has('ArrowRight') || window.AX3D.input.keys.has('d')) mesh.position.x += speed;
+                            if(window.AX3D.input.keys.has('ArrowUp') || window.AX3D.input.keys.has('w')) mesh.position.z -= speed;
+                            if(window.AX3D.input.keys.has('ArrowDown') || window.AX3D.input.keys.has('s')) mesh.position.z += speed;
+                        } 
+                        else if (cmd.type === 'ai') {
+                            let time = Date.now() * 0.002 + cmd.seed;
+                            mesh.position.x += Math.sin(time) * 0.02;
+                        }
+                    });
 
-                    if (cameraTargetId && virtualObjects[cameraTargetId]) {
-                        const targetPos = virtualObjects[cameraTargetId].position;
-                        camera.position.set(targetPos.x, targetPos.y + 4, targetPos.z + 7);
+                    if (cameraFollowTarget !== null && virtualObjects[cameraFollowTarget]) {
+                        const targetPos = virtualObjects[cameraFollowTarget].position;
+                        camera.position.set(targetPos.x, targetPos.y + 5, targetPos.z + 8);
                         camera.lookAt(targetPos.x, targetPos.y, targetPos.z);
                     }
                 },
@@ -270,82 +328,33 @@
                     virtualObjects = {};
                 }
             };
+
             animate();
         }
 
-        function createVirtualObject(id, color, x, y, z) {
-            const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-            const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.4 });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(x, y, z);
-            scene.add(mesh);
-            virtualObjects[id] = mesh;
-        }
-
-        // --- UPDATE DE LA GRILLE (STYLE PSP MINI + LONG PRESS 5S) ---
-        window.updateLibrary = function() {
+        // --- GESTION DE LA BIBLIOTHEQUE ---
+        function updateLibrary() {
             const grid = document.getElementById('gameGrid');
             const empty = document.getElementById('emptyLibrary');
             const count = document.getElementById('gameCount');
             if (gameLibrary.length === 0) {
                 grid.innerHTML = '';
                 empty.style.display = 'flex';
-                count.textContent = '0 binary loaded';
+                count.textContent = '0 games';
                 return;
             }
             empty.style.display = 'none';
-            count.textContent = `${gameLibrary.length} app exploitable`;
-            
+            count.textContent = `${gameLibrary.length} game${gameLibrary.length > 1 ? 's' : ''}`;
             grid.innerHTML = gameLibrary.map((game, idx) => `
-                <div class="game-card glass rounded-xl p-3 flex items-center justify-between border border-white/5 select-none" 
-                     data-index="${idx}"
-                     onmousedown="window.startHold(event, ${idx})" 
-                     onmouseup="window.clearHold()" 
-                     onmouseleave="window.clearHold()"
-                     ontouchstart="window.startHold(event, ${idx})" 
-                     ontouchend="window.clearHold()">
-                    
-                    <div class="flex items-center gap-4 flex-1" onclick="window.launchGame(${idx})">
-                        <div class="w-16 h-10 rounded-lg bg-gradient-to-r from-emerald-600/50 to-indigo-600/50 flex items-center justify-center border border-white/10 flex-shrink-0">
-                            <div class="logo-font text-xs font-black text-white/50">.AX</div>
-                        </div>
-                        <div class="truncate">
-                            <h3 class="font-bold text-sm text-gray-200 truncate">${game.name}</h3>
-                            <p class="text-[11px] text-gray-500 font-mono">${game.size} bytes • RDC VM</p>
-                        </div>
+                <div class="game-card glass rounded-2xl p-4 flex flex-col" onclick="launchGame(${idx})">
+                    <div class="aspect-square rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 mb-3 flex items-center justify-center">
+                        <div class="logo-font text-5xl font-black text-white/20">AX</div>
                     </div>
-
-                    <button id="del-btn-${idx}" class="hidden ml-2 px-3 py-1.5 text-xs font-semibold bg-red-600/80 hover:bg-red-600 text-white rounded-lg shadow-lg border border-red-500/40 transition-all animate-bounce" onclick="window.deleteGame(event, ${idx})">
-                        Supprimer
-                    </button>
+                    <h3 class="font-bold text-sm mb-1 truncate">${game.name}</h3>
+                    <p class="text-xs text-gray-500">${game.size} bytes • Binary Mode</p>
                 </div>
             `).join('');
-        };
-
-        // --- LOGIQUE DETENTION DE 5 SECONDES ---
-        window.startHold = function(e, idx) {
-            // Évite le déclenchement si on clique directement sur supprimer
-            if(e.target.tagName.toLowerCase() === 'button') return;
-            
-            window.clearHold();
-            holdTimer = setTimeout(() => {
-                const btn = document.getElementById(`del-btn-${idx}`);
-                if (btn) btn.classList.remove('hidden');
-            }, 5000); // 5000ms = 5 secondes
-        };
-
-        window.clearHold = function() {
-            if (holdTimer) clearTimeout(holdTimer);
-        };
-
-        window.deleteGame = function(e, idx) {
-            e.stopPropagation(); // Évite de lancer le jeu au clic
-            if(confirm("Supprimer ce fichier binaire de la bibliothèque ?")) {
-                gameLibrary.splice(idx, 1);
-                localStorage.setItem('ax3d_library_bin', JSON.stringify(gameLibrary));
-                window.updateLibrary();
-            }
-        };
+        }
 
         window.launchGame = (idx) => {
             const game = gameLibrary[idx];
@@ -354,7 +363,6 @@
             for (let i = 0; i < binaryString.length; i++) {
                 bytes[i] = binaryString.charCodeAt(i);
             }
-            
             loadBinaryGame(bytes.buffer);
             document.getElementById('homeScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'flex';
@@ -369,14 +377,13 @@
             document.getElementById('gameScreen').style.display = 'none';
             document.getElementById('controller').style.display = 'none';
             document.getElementById('menuPanel').classList.remove('open');
-            window.updateLibrary();
         }
 
         document.getElementById('gameFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            showLoading('Lecture du Bytecode de Firmin...');
+            showLoading('Reading Bytecode...');
             updateProgress(40);
 
             try {
@@ -390,38 +397,42 @@
                 }
                 const base64Bin = window.btoa(binary);
 
-                // Ajout à la bibliothèque existante au lieu de l'écraser
                 gameLibrary.push({
                     name: file.name,
                     size: file.size,
                     rawBin: base64Bin
                 });
-                
-                localStorage.setItem('ax3d_library_bin', JSON.stringify(gameLibrary));
-                window.updateLibrary();
+                localStorage.setItem('ax3d_library_bin_v2', JSON.stringify(gameLibrary));
+                updateLibrary();
                 hideLoading();
-                
                 window.launchGame(gameLibrary.length - 1);
 
             } catch (err) {
                 hideLoading();
-                alert('Erreur décodage: ' + err.message);
+                alert('Error: ' + err.message);
             }
         });
 
         document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('menuPanel').classList.add('open'));
         document.getElementById('closeMenu').addEventListener('click', () => document.getElementById('menuPanel').classList.remove('open'));
         document.getElementById('quitBtn').addEventListener('click', quitToLibrary);
-        document.getElementById('resetBtn').addEventListener('click', () => { if(gameLibrary.length > 0) window.launchGame(gameLibrary.length - 1); });
-        
-        document.getElementById('openInfoBtn').addEventListener('click', () => document.getElementById('infoPanel').classList.add('open'));
-        document.getElementById('closeInfo').addEventListener('click', () => document.getElementById('infoPanel').classList.remove('open'));
+        document.getElementById('resetBtn').addEventListener('click', () => { if (gameLibrary.length > 0) window.launchGame(gameLibrary.length - 1); });
 
+        // Contôles Manette & Clavier
         function setButtonState(key, pressed) {
+            document.querySelectorAll(`[data-key="${key}"]`).forEach(btn => { if (pressed) btn.classList.add('active'); else btn.classList.remove('active'); });
             window.AX3D.input.keys[pressed ? 'add' : 'delete'](key);
         }
         window.addEventListener('keydown', (e) => setButtonState(e.key, true));
         window.addEventListener('keyup', (e) => setButtonState(e.key, false));
+
+        document.querySelectorAll('[data-key]').forEach(btn => {
+            const key = btn.dataset.key;
+            btn.addEventListener('mousedown', (e) => { e.preventDefault(); setButtonState(key, true); });
+            btn.addEventListener('mouseup', () => setButtonState(key, false));
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); setButtonState(key, true); });
+            btn.addEventListener('touchend', () => setButtonState(key, false));
+        });
 
         function setupStick(stickId, nubId, inputTarget) {
             const stick = document.getElementById(stickId);
@@ -463,7 +474,7 @@
         });
 
         initRenderer();
-        window.updateLibrary();
+        updateLibrary();
     </script>
 </body>
 </html>
